@@ -47,16 +47,13 @@ function onReady([, cover]) {
 
   const audio = new Audio();
   audio.volume = 0.45;
-  audio.src = `https://b.ppy.sh/preview/${pageInfo.beatmapSetId}.mp3`;
+  audio.src = `https://catboy.best/preview/audio/${pageInfo.beatmapId}/full`;
   audio.play()
     .then(() => playPreview(
       canvasElement, playbackTimeElement,
-      progressElement, cleanBeatmap, previewTime,
+      progressElement, cleanBeatmap, previewTime, audio,
     ))
     .catch(displayError);
-  progressElement.addEventListener('pointerdown', () => {
-    audio.pause();
-  });
 }
 
 

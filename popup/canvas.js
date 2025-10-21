@@ -1,5 +1,5 @@
 import { isSlider, isSpinner, isHold, isNewCombo } from './renderers/utils'
-import OsuRenderer from './renderers/osu'; 
+import OsuRenderer from './renderers/osu';
 import ManiaRenderer from './renderers/mania';
 
 const toTimeString = (time) => {
@@ -27,7 +27,6 @@ const processHitObjects = (hitObjects, timingPoints, SV) => {
   }
 };
 
-
 /**
  *
  * @param {HTMLCanvasElement} canvasElement
@@ -35,9 +34,10 @@ const processHitObjects = (hitObjects, timingPoints, SV) => {
  * @param {HTMLDivElement} progressElement
  * @param {*} beatmap
  * @param {*} previewTime
+ * @param {HTMLAudioElement} audio
  */
-const playPreview = (canvasElement, playbackTimeElement, progressElement, beatmap, previewTime) => {  
-  let mapStartTime = previewTime;
+const playPreview = (canvasElement, playbackTimeElement, progressElement, beatmap, previewTime, audio) => {
+  let mapStartTime = previewTime / 1000;
   let startTime = performance.now();
 
   const ctx = canvasElement.getContext('2d');
@@ -47,7 +47,7 @@ const playPreview = (canvasElement, playbackTimeElement, progressElement, beatma
   const renderer = new Renderer(ctx, beatmap);
 
   const hitObjects = beatmap.objects;
-  const timingPoints = beatmap.timing_points
+  const timingPoints = beatmap.timing_points;
 
   const { sv: SV } = beatmap;
 
@@ -59,7 +59,7 @@ const playPreview = (canvasElement, playbackTimeElement, progressElement, beatma
   if (mapStartTime < 0) {
     mapStartTime = (lastObject.endTime) * 0.42;
   }
-  
+
   let seeking = false;
 
   const animate = (currentTime) => {
@@ -76,6 +76,7 @@ const playPreview = (canvasElement, playbackTimeElement, progressElement, beatma
   requestAnimationFrame(animate);
 
   progressElement.addEventListener('pointerdown', (e) => {
+    audio.pause();
     seeking = true;
     const rect = progressElement.getBoundingClientRect();
     const x = Math.max(0, e.clientX - rect.left);
@@ -93,6 +94,12 @@ const playPreview = (canvasElement, playbackTimeElement, progressElement, beatma
     mapStartTime = time;
   });
   document.addEventListener('pointerup', () => {
+    if (seeking) {
+      // Seek the audio to the new position
+      audio.currentTime = mapStartTime / 1000;
+      audio.play().catch(() => {});
+      startTime = performance.now();
+    }
     progressElement.classList.remove('seeking');
     seeking = false;
   });
