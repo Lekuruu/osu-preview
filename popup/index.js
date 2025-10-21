@@ -109,10 +109,13 @@ const attemptToFetchBeatmap = (id, attempts) => fetchBeatmapById(id)
 
 const processBeatmap = (rawBeatmap) => {
   const { map } = new ojsama.parser().feed(rawBeatmap);
-
   cleanBeatmap = map;
 
-  previewTime = Number(rawBeatmap.split('PreviewTime:')[1].split('\n')[0]);
+  // Extract "PreviewTime" if present, default to null when missing.
+  {
+    const match = rawBeatmap.match(/PreviewTime:\s*([+-]?\d+)/);
+    previewTime = match ? Number(match[1]) : -1;
+  }
 
   chrome.extension.getBackgroundPage().console.log(cleanBeatmap);
 
