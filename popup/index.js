@@ -50,16 +50,19 @@ function onReady([, cover]) {
   audio.src = `https://catboy.best/preview/audio/${pageInfo.beatmapId}/full`;
   audio.play()
     .then(() => playPreview(
-      canvasElement, playbackTimeElement,
-      progressElement, cleanBeatmap, previewTime, audio,
+      canvasElement,
+      playbackTimeElement,
+      progressElement,
+      cleanBeatmap,
+      previewTime,
+      audio,
     ))
     .catch(displayError);
 }
 
-
-const fetchBeatmapById = id =>
-  fetch(`https://osu.ppy.sh/osu/${id}`, { credentials: 'include' })
-    .then(res => res.text());
+const fetchBeatmapById = (id) => (
+  fetch(`https://osu.ppy.sh/osu/${id}`, { credentials: 'include' }).then((res) => res.text())
+);
 
 const getPageInfo = (url, tabId) => new Promise((resolve, reject) => {
   const info = {
@@ -121,22 +124,21 @@ const processBeatmap = (rawBeatmap) => {
 
   // Support old beatmaps
   cleanBeatmap.mode = Number(cleanBeatmap.mode || 0);
- 
+
   const supportedGamemodes = [0, 3];
   if (!supportedGamemodes.includes(cleanBeatmap.mode)) {
     throw Error(UNSUPPORTED_GAMEMODE);
   }
 };
 
-const fetchBeatmapBackground = beatmapSetId =>
-  new Promise((resolve) => {
-    // Preload beatmap cover
-    const cover = new Image();
-    cover.src = `https://assets.ppy.sh/beatmaps/${beatmapSetId}/covers/cover@2x.jpg`;
-    cover.onload = () => resolve(cover);
-    cover.onerror = () => resolve();
-    cover.onabort = () => resolve();
-  });
+const fetchBeatmapBackground = (beatmapSetId) => new Promise((resolve) => {
+  // Preload beatmap cover
+  const cover = new Image();
+  cover.src = `https://assets.ppy.sh/beatmaps/${beatmapSetId}/covers/cover@2x.jpg`;
+  cover.onload = () => resolve(cover);
+  cover.onerror = () => resolve();
+  cover.onabort = () => resolve();
+});
 
 if (__FIREFOX__) {
   containerElement.classList.toggle('firefox', true);
