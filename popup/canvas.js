@@ -1,4 +1,5 @@
-import { isSlider, isSpinner, isHold, isNewCombo } from './renderers/utils'
+/* eslint-disable no-param-reassign */
+import { isSlider, isSpinner, isHold } from './renderers/utils';
 import OsuRenderer from './renderers/osu';
 import ManiaRenderer from './renderers/mania';
 
@@ -12,7 +13,7 @@ const processHitObjects = (hitObjects, timingPoints, SV) => {
   for (let i = 0; i < hitObjects.length; i += 1) {
     const object = hitObjects[i];
     if (isSlider(object)) {
-      const { ms_per_beat: beatDuration } = timingPoints.find(e => e.time <= object.time);
+      const { ms_per_beat: beatDuration } = timingPoints.find((e) => e.time <= object.time);
       const duration = object.data.distance / (100.0 * SV) * beatDuration;
       const { repetitions } = object.data;
       object.duration = duration;
@@ -36,14 +37,21 @@ const processHitObjects = (hitObjects, timingPoints, SV) => {
  * @param {*} previewTime
  * @param {HTMLAudioElement} audio
  */
-const playPreview = (canvasElement, playbackTimeElement, progressElement, beatmap, previewTime, audio) => {
+const playPreview = (
+  canvasElement,
+  playbackTimeElement,
+  progressElement,
+  beatmap,
+  previewTime,
+  audio,
+) => {
   let mapStartTime = previewTime;
   let startTime = performance.now();
 
   const ctx = canvasElement.getContext('2d');
   ctx.translate(64, 48);
 
-  const Renderer = [OsuRenderer, null, null, ManiaRenderer][beatmap.mode]
+  const Renderer = [OsuRenderer, null, null, ManiaRenderer][beatmap.mode];
   const renderer = new Renderer(ctx, beatmap);
 
   const hitObjects = beatmap.objects;
