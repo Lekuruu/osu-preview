@@ -1,4 +1,6 @@
-import { isCircle, isNewCombo, isSlider, isSpinner } from './utils'
+import {
+  isCircle, isNewCombo, isSlider, isSpinner,
+} from './utils';
 
 const CIRCLE_BORDER_WIDTH = 0.15;
 const CIRCLE_HIT_FACTOR = 1.33;
@@ -12,48 +14,48 @@ const SPINNER_CENTER_SIZE = 10;
 const COMBO_COLOURS = ['0,202,0', '18,124,255', '242,24,57', '255,192,0'];
 
 const processTimingPoints = (timingPoints) => {
-    const firstPoint = timingPoints[0];
-    firstPoint.time = 0;
-    let msPerBeat = firstPoint.ms_per_beat;
-    for (let i = 0; i < timingPoints.length; i += 1) {
-      const point = timingPoints[i];
-      if (point.ms_per_beat < 0) {
-        point.ms_per_beat = msPerBeat * point.ms_per_beat / -100;
-      } else {
-        msPerBeat = point.ms_per_beat;
-      }
+  const firstPoint = timingPoints[0];
+  firstPoint.time = 0;
+  let msPerBeat = firstPoint.ms_per_beat;
+  for (let i = 0; i < timingPoints.length; i += 1) {
+    const point = timingPoints[i];
+    if (point.ms_per_beat < 0) {
+      point.ms_per_beat = msPerBeat * point.ms_per_beat / -100;
+    } else {
+      msPerBeat = point.ms_per_beat;
     }
-    timingPoints.reverse();
-  };
-  
-  const calculateRadius = CS => 32 * (1 - 0.7 * (CS - 5) / 5);
-  
-  const calculatePreempt = AR => (
-    AR <= 5 ?
-      1200 + 600 * (5 - AR) / 5 :
-      1200 - 750 * (AR - 5) / 5);
-  
-  const calculateFadeIn = AR => (
-    AR <= 5 ?
-      800 + 400 * (5 - AR) / 5 :
-      800 - 500 * (AR - 5) / 5);
+  }
+  timingPoints.reverse();
+};
+
+const calculateRadius = (CS) => 32 * (1 - 0.7 * (CS - 5) / 5);
+
+const calculatePreempt = (AR) => (
+  AR <= 5
+    ? 1200 + 600 * (5 - AR) / 5
+    : 1200 - 750 * (AR - 5) / 5);
+
+const calculateFadeIn = (AR) => (
+  AR <= 5
+    ? 800 + 400 * (5 - AR) / 5
+    : 800 - 500 * (AR - 5) / 5);
 
 const clamp = (x, min, max) => Math.min(max, Math.max(min, x));
 
 const lerp = (t, a, b) => (1 - t) * a + t * b;
 
-const lerper = t => (a, b) => lerp(t, a, b);
+const lerper = (t) => (a, b) => lerp(t, a, b);
 
 const zip = (fn, ...arrs) => {
-  const len = Math.max(...(arrs.map(e => e.length)));
+  const len = Math.max(...(arrs.map((e) => e.length)));
   const result = [];
   for (let i = 0; i < len; i += 1) {
-    result.push(fn(...arrs.map(e => e[i])));
+    result.push(fn(...arrs.map((e) => e[i])));
   }
   return result;
 };
 
-const lerperVector = t => (a, b) => zip(lerper(t), a, b);
+const lerperVector = (t) => (a, b) => zip(lerper(t), a, b);
 
 const bezierAt = (t, points) => {
   if (points.length === 1) {
@@ -64,13 +66,12 @@ const bezierAt = (t, points) => {
   return bezierAt(t, zip(lerperVector(t), starts, ends));
 };
 
-
 const getFollowPosition = (object, time) => {
   let [x, y] = object.data.pos;
   const relativeTime = (time - object.time) % (object.duration * 2);
-  const t = relativeTime < object.duration ?
-    relativeTime / object.duration :
-    2 - (relativeTime / object.duration);
+  const t = relativeTime < object.duration
+    ? relativeTime / object.duration
+    : 2 - (relativeTime / object.duration);
   if (object.data.type === 'L') {
     const [cx, cy] = object.data.points[0];
     const dx = cx - x;
@@ -154,7 +155,6 @@ const getFollowPosition = (object, time) => {
   return [x, y];
 };
 
-
 const sliderStroke = (ctx, circleRadius, colour, opacity) => {
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
@@ -188,15 +188,20 @@ const drawBezierPoints = (ctx, points) => {
   } else if (points.length === 3) {
     ctx.moveTo(points[0][0], points[0][1]);
     ctx.quadraticCurveTo(
-      points[1][0], points[1][1],
-      points[2][0], points[2][1],
+      points[1][0],
+      points[1][1],
+      points[2][0],
+      points[2][1],
     );
   } else if (points.length === 4) {
     ctx.moveTo(points[0][0], points[0][1]);
     ctx.bezierCurveTo(
-      points[1][0], points[1][1],
-      points[2][0], points[2][1],
-      points[3][0], points[3][1],
+      points[1][0],
+      points[1][1],
+      points[2][0],
+      points[2][1],
+      points[3][0],
+      points[3][1],
     );
   } else {
     const divisions = Math.min(64, Math.ceil(500 / points.length));
@@ -344,7 +349,6 @@ const drawFollowPoint = (ctx, previous, next, circleRadius, time, fadeIn, preemp
     const t = (next.time - time) / (next.time - previous.time);
     const t2 = clamp(t * 4 - 3, 0, 1);
 
-
     const t1 = clamp((previous.time - time) / (preempt) * 4 - 2, 0, 1);
 
     ctx.beginPath();
@@ -368,70 +372,71 @@ const drawFollowCircle = (ctx, circle, circleRadius, time) => {
   ctx.stroke();
 };
 
-
 export default class OsuRenderer {
-    constructor(ctx, beatmap) {
-        this.ctx = ctx;
-        const timingPoints = beatmap.timing_points;
+  constructor(ctx, beatmap) {
+    this.ctx = ctx;
+    const timingPoints = beatmap.timing_points;
 
-        processTimingPoints(timingPoints);
-      
-        this.hitObjects = beatmap.objects;
-      
-        const { ar: AR, cs: CS, sv: SV } = beatmap;
-      
-        this.radius = calculateRadius(CS);
-        this.preempt = calculatePreempt(AR);
-        this.fadeIn = calculateFadeIn(AR);
-      
-        let comboNumber = 0;
-        let comboCount = 1;
-        for (let i = 0; i < this.hitObjects.length; i += 1) {
-          const object = this.hitObjects[i];
-          comboCount += 1;
-          if (isNewCombo(object)) { // New combo bit
-            comboCount = 1;
-            comboNumber = (comboNumber + 1) % COMBO_COLOURS.length;
-          }
-          object.comboCount = comboCount;
-          object.comboNumber = comboNumber;
-          if (isSlider(object)) {
-            object.endPos = getFollowPosition(object, object.endTime);
-          }
+    processTimingPoints(timingPoints);
+
+    this.hitObjects = beatmap.objects;
+
+    const { ar: AR, cs: CS } = beatmap;
+
+    this.radius = calculateRadius(CS);
+    this.preempt = calculatePreempt(AR);
+    this.fadeIn = calculateFadeIn(AR);
+
+    let comboNumber = 0;
+    let comboCount = 1;
+    for (let i = 0; i < this.hitObjects.length; i += 1) {
+      const object = this.hitObjects[i];
+      comboCount += 1;
+      if (isNewCombo(object)) { // New combo bit
+        comboCount = 1;
+        comboNumber = (comboNumber + 1) % COMBO_COLOURS.length;
+      }
+      object.comboCount = comboCount;
+      object.comboNumber = comboNumber;
+      if (isSlider(object)) {
+        object.endPos = getFollowPosition(object, object.endTime);
+      }
+    }
+  }
+
+  render(time) {
+    const {
+      ctx, radius, preempt, fadeIn,
+    } = this;
+
+    this.hitObjects
+      .filter((object) => {
+        if (time < object.time - preempt) return false;
+        if (time > object.endTime + CIRCLE_HIT_DURATION) return false;
+        return true;
+      })
+      .reverse()
+      .forEach((object, idx, arr) => {
+        const previousObject = arr[idx + 1];
+        if (previousObject && !isSpinner(previousObject) && !isSpinner(object)) {
+          drawFollowPoint(ctx, previousObject, object, radius, time, fadeIn, preempt);
         }
-    }
 
-    render(time) {
-        const { ctx, radius, preempt, fadeIn } = this;
+        if (isSlider(object)) {
+          drawSliderBody(ctx, object, radius, time, fadeIn, preempt);
+        }
 
-        this.hitObjects
-        .filter((object) => {
-          if (time < object.time - preempt) return false;
-          if (time > object.endTime + CIRCLE_HIT_DURATION) return false;
-          return true;
-        })
-        .reverse()
-        .forEach((object, idx, arr) => {
-          const previousObject = arr[idx + 1];
-          if (previousObject && !isSpinner(previousObject) && !isSpinner(object)) {
-            drawFollowPoint(ctx, previousObject, object, radius, time, fadeIn, preempt);
-          }
-  
-          if (isSlider(object)) {
-            drawSliderBody(ctx, object, radius, time, fadeIn, preempt);
-          }
-  
-          if (isCircle(object) || (isSlider(object) && time <= object.time)) {
-            drawHitCircle(ctx, object, radius, time, fadeIn, preempt);
-          }
-  
-          if (isSpinner(object)) {
-            drawSpinner(ctx, object, radius, time, fadeIn, preempt);
-          } else if (time <= object.time) {
-            drawApproachCircle(ctx, object, radius, time, fadeIn, preempt);
-          } else if (isSlider(object) && time <= object.endTime) {
-            drawFollowCircle(ctx, object, radius, time);
-          }
-        });
-    }
+        if (isCircle(object) || (isSlider(object) && time <= object.time)) {
+          drawHitCircle(ctx, object, radius, time, fadeIn, preempt);
+        }
+
+        if (isSpinner(object)) {
+          drawSpinner(ctx, object, radius, time, fadeIn, preempt);
+        } else if (time <= object.time) {
+          drawApproachCircle(ctx, object, radius, time, fadeIn, preempt);
+        } else if (isSlider(object) && time <= object.endTime) {
+          drawFollowCircle(ctx, object, radius, time);
+        }
+      });
+  }
 }
