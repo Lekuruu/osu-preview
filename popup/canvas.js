@@ -37,7 +37,7 @@ const processHitObjects = (hitObjects, timingPoints, SV) => {
  * @param {HTMLAudioElement} audio
  */
 const playPreview = (canvasElement, playbackTimeElement, progressElement, beatmap, previewTime, audio) => {
-  let mapStartTime = previewTime / 1000;
+  let mapStartTime = previewTime;
   let startTime = performance.now();
 
   const ctx = canvasElement.getContext('2d');
@@ -60,10 +60,27 @@ const playPreview = (canvasElement, playbackTimeElement, progressElement, beatma
     mapStartTime = (lastObject.endTime) * 0.42;
   }
 
+  // Start audio playback at the correct time
+  audio.currentTime = mapStartTime / 1000;
+  audio.play();
+
   let seeking = false;
+  let waitingForSeek = false;
 
   const animate = (currentTime) => {
-    const time = seeking ? mapStartTime : currentTime - startTime + mapStartTime;
+    // Sync with actual audio position when playing
+    if (!seeking && !waitingForSeek && !audio.paused) {
+      const audioTime = audio.currentTime * 1000;
+      const expectedTime = currentTime - startTime + mapStartTime;
+
+      // If audio position differs significantly, resync
+      if (Math.abs(audioTime - expectedTime) > 100) {
+        mapStartTime = audioTime;
+        startTime = currentTime;
+      }
+    }
+
+    const time = seeking ? mapStartTime : performance.now() - startTime + mapStartTime;
     // eslint-disable-next-line no-param-reassign
     playbackTimeElement.innerText = `${toTimeString(Math.min(time, lastTime))} / ${toTimeString(lastTime)}`;
     progressElement.style.setProperty('--progress', time / lastTime);
@@ -74,6 +91,23 @@ const playPreview = (canvasElement, playbackTimeElement, progressElement, beatma
     requestAnimationFrame(animate);
   };
   requestAnimationFrame(animate);
+
+  // Handle audio seeking completion
+  const onSeeked = () => {
+    if (waitingForSeek) {
+      // Sync animation time to actual audio position after seek completes
+      const actualAudioTime = audio.currentTime * 1000;
+      mapStartTime = actualAudioTime;
+      startTime = performance.now();
+      waitingForSeek = false;
+      audio.play().catch(() => {
+        // Handle play interruption
+      });
+      progressElement.classList.remove('seeking');
+    }
+  };
+
+  audio.addEventListener('seeked', onSeeked);
 
   progressElement.addEventListener('pointerdown', (e) => {
     audio.pause();
@@ -95,13 +129,11 @@ const playPreview = (canvasElement, playbackTimeElement, progressElement, beatma
   });
   document.addEventListener('pointerup', () => {
     if (seeking) {
+      seeking = false;
+      waitingForSeek = true;
       // Seek the audio to the new position
+      // The 'seeked' event handler will sync and resume playback
       audio.currentTime = mapStartTime / 1000;
-      audio.play().then(() => {
-        seeking = false;
-        startTime = performance.now();
-        progressElement.classList.remove('seeking');
-      });
     }
   });
 };
