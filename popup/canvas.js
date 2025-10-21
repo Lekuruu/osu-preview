@@ -97,11 +97,12 @@ const playPreview = (canvasElement, playbackTimeElement, progressElement, beatma
     if (seeking) {
       // Seek the audio to the new position
       audio.currentTime = mapStartTime / 1000;
-      audio.play().catch(() => {});
-      startTime = performance.now();
+      audio.play().then(() => {
+        seeking = false;
+        startTime = performance.now();
+        progressElement.classList.remove('seeking');
+      });
     }
-    progressElement.classList.remove('seeking');
-    seeking = false;
   });
 };
 
